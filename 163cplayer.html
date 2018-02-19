@@ -1,0 +1,208 @@
+<html>
+<head>
+	    <meta charset="utf-8"> 
+</head>
+
+<body>
+    <div class="aplayer" id="app" style="margin-top:22px;"></div>
+    <script src="https://cdn.bootcss.com/cplayer/3.1.4/cplayer.js"></script>
+    <script>
+        "use strict";
+        /**
+        * 获取get请求 指定参数的值
+        * @param name 参数名
+        * @returns {*}
+        * @constructor
+        */
+        function GetQueryString(name) {
+            var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+            var r = window.location.search.substr(1).match(reg);
+            if (r != null)
+                return decodeURI(r[2]);
+            return null;
+        }
+        function randInt(start, end) {
+            if (end < start) {
+                var mid = end;
+                end = start;
+                start = mid;
+            }
+            return Math.floor(Math.random() * (end - start)) + start;
+        }
+
+        /**
+        * 获取网易云音乐的歌曲信息
+        * @param id 类型可为int，Array
+        * @param api 类型为String，是网易云api地址...为可选参数
+        * @returns [{},{}..]//Many or {..}//Only 1
+        * @constructor
+        */
+        function get163music(id, callback, api, array) {
+            var api = arguments[2] || "https://163music.a632079.me";
+            var arr = arguments[3] || false;
+            var t;
+            if (Array.isArray(id)) {
+                var result = [];
+                id.forEach(function (song_id) {
+                    if (id[(id.length - 1)] == song_id) {
+                        get163music(song_id, function (data) { result.push(data); callback(result); }, api, true);
+                    } else {
+                        get163music(song_id, function (data) { result.push(data); }, api, true);
+                    }
+                });
+            } else {
+                var song_id = id;
+                console.log("Song_id:" + song_id);
+                var xhr = new XMLHttpRequest();
+                var music = {};
+                //Get Song URL
+                console.log("Music id: " + song_id + ": URL Loading..");
+                t = Date.now();
+                xhr.open("get", api + "/music/url?id=" + song_id, true);
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState == 4) {
+                        var ct = Date.now() - t;
+                        console.log("Music id: " + song_id + ": URL Loaded. 耗时: " + ct + "ms");
+                        var res = JSON.parse(xhr.responseText);
+                        music.url = res.data[0].url.replace("http://", "https://");
+
+                        //Get Song Info
+                        console.log("Music id: " + song_id + ": info Loading..");
+                        t = Date.now();
+                        xhr.open("get", api + "/search?keywords=" + song_id, true);
+                        xhr.onreadystatechange = function () {
+                            if (xhr.readyState == 4) {
+                                var ct = Date.now() - t;
+                                console.log("Music id: " + song_id + ": info Loaded. 耗时: " + ct + "ms");
+                                res = JSON.parse(xhr.responseText);
+                                //console.log(res);
+                                music.name = res.result.songs[0].name;
+                                res.result.songs[0].artists.forEach(function (data) {
+                                    //console.log(data);
+                                    if (music.artists) {
+                                        music.artists += " / " + data.name;
+                                    } else {
+                                        music.artists = data.name;
+                                    }
+                                    music.artists = data.name;
+                                });
+                                //music.pic = res.result.songs[0].album.picUrl.replace("http://", "https://");
+                                //Get Album Picture
+                                console.log("Album Picture Loading..");
+                                t = Date.now();
+                                xhr.open("get", api + "/song/detail?ids=" + song_id, true);
+                                xhr.onreadystatechange = function () {
+                                    if (xhr.readyState == 4) {
+                                        var ct = Date.now() - t;
+                                        console.log("Album Picture Loaded. 耗时: " + ct + "ms");
+                                        res = JSON.parse(xhr.responseText);
+                                        //console.log(res);
+                                        music.pic = res.songs[0].al.picUrl.replace("http://", "https://");
+                                        //NProgress.set(0.65);
+
+                                        //Get lyric
+                                        console.log("Music id: " + song_id + ": lyric Loading..");
+                                        t = Date.now();
+                                        xhr.open("get", api + "/lyric?id=" + song_id, true);
+                                        xhr.onreadystatechange = function () {
+                                            if (xhr.readyState == 4) {
+                                                ct = Date.now() - t;
+                                                console.log("Music lyric Loaded. 耗时: " + ct + "ms");
+                                                res = JSON.parse(xhr.responseText);
+                                                //console.log(res);
+                                                if (res.hasOwnProperty("nolyric") && res.nolyric == true) {
+                                                    music.lyric = "[00:00.00]这是一首纯音乐呢~";
+                                                } else {
+                                                    music.lyric = res.lrc.lyric;
+                                                    if (res.hasOwnProperty("tlyric")) {
+                                                        music.tlyric = res.tlyric.lyric;
+                                                    }
+                                                }
+                                                if (!arr) {
+                                                    var res = [music];
+                                                    callback(res);
+                                                } else {
+                                                    callback(music);
+                                                }
+                                            }
+                                        }
+                                        xhr.send();
+                                    }
+                                }
+                                xhr.send();
+                            }
+                        }
+                        xhr.send();
+                    }
+                }
+                xhr.send();
+            }
+        }
+        "use strict";
+        function LoadCplayer(list) {
+            list.forEach(function (event) {
+                var song_obj = {
+                    name: event.name,
+                    artist: event.artists,
+                    src: event.url,
+                    poster: event.pic,
+                    lyric: event.lyric
+                };
+                if (event.hasOwnProperty('tlyric')) {
+                    song_obj.sublyric = event.tlyric;
+                }
+                cplayer_list.push(song_obj);
+                if (list[(list.length - 1)] == event) {
+                    var player = new cplayer({
+                        element: document.getElementById('app'),
+                        zoomOutKana: zoomOutKana,
+                        playmode: playmode,
+                        volume: volume,
+                        point: point,
+                        showPlaylist: showPlaylist,
+                        autoplay: autoplay,
+                        width: width,
+                        size: size,
+                        style: style,
+                        playlist: cplayer_list
+                    });
+                }
+            });
+        }
+    </script>
+    <script>
+        "use strict";
+        var playlist = GetQueryString("playlist");
+        var zoomOutKana = GetQueryString("zoomOutKana") || false;
+        if (zoomOutKana == "false") {
+            zoomOutKana = false;
+        }
+        var playmode = GetQueryString("playmode") || "listloop";
+        var volume = GetQueryString("volume") || 1;
+        var autoplay = GetQueryString("autoplay") || false;
+        if (autoplay == "false") {
+            autoplay = false;
+        }
+        var showPlaylist = GetQueryString("showPlaylist") || false;
+        if (showPlaylist == "false") {
+            showPlaylist = false;
+        }
+        var width = GetQueryString("width") || "";
+        var size = GetQueryString("size") || "12px";
+        var point = GetQueryString("point") || 0;
+        var style = GetQueryString("style") || "";
+        var api_url = GetQueryString("api") || "https://163music.a632079.me";
+        var cplayer_list = [];
+        window.onload = function () {
+            if (playlist) {
+                var ids = [];
+                ids = playlist.split(",");
+                get163music(ids, LoadCplayer, api_url);
+            } else {
+                document.write("请填写音乐ID");
+            }
+        }
+    </script>
+</body>
+
+</html>

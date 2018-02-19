@@ -1,0 +1,202 @@
+<html>
+
+<head></head>
+
+<body>
+    <div class="aplayer" id="aplayer"></div>
+    <script src="https://cdn.bootcss.com/aplayer/1.6.0/APlayer.min.js"></script>
+    <script>
+        "use strict";
+        /**
+        * 获取get请求 指定参数的值
+        * @param name 参数名
+        * @returns {*}
+        * @constructor
+        */
+        function GetQueryString(name) {
+            var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+            var r = window.location.search.substr(1).match(reg);
+            if (r != null)
+                return decodeURI(r[2]);
+            return null;
+        }
+        function randInt(start, end) {
+            if (end < start) {
+                var mid = end;
+                end = start;
+                start = mid;
+            }
+            return Math.floor(Math.random() * (end - start)) + start;
+        }
+
+        /**
+        * 获取网易云音乐的歌曲信息
+        * @param id 类型可为int，Array
+        * @param api 类型为String，是网易云api地址...为可选参数
+        * @returns [{},{}..]//Many or {..}//Only 1
+        * @constructor
+        */
+        function get163music(id, callback, api, array) {
+            var api = arguments[2] || "https://163music.a632079.me";
+            var arr = arguments[3] || false;
+            var t;
+            if (Array.isArray(id)) {
+                var result = [];
+                id.forEach(function (song_id) {
+                    if (id[(id.length - 1)] == song_id) {
+                        get163music(song_id, function (data) { result.push(data); callback(result); }, api, true);
+                    } else {
+                        get163music(song_id, function (data) { result.push(data); }, api, true);
+                    }
+                });
+            } else {
+                var song_id = id;
+                console.log("Song_id:" + song_id);
+                var xhr = new XMLHttpRequest();
+                var music = {};
+                //Get Song URL
+                console.log("Music id: " + song_id + ": URL Loading..");
+                t = Date.now();
+                xhr.open("get", api + "/music/url?id=" + song_id, true);
+                xhr.onreadystatechange = function () {
+                    if (xhr.readyState == 4) {
+                        var ct = Date.now() - t;
+                        console.log("Music id: " + song_id + ": URL Loaded. 耗时: " + ct + "ms");
+                        var res = JSON.parse(xhr.responseText);
+                        music.url = res.data[0].url.replace("http://", "https://");
+
+                        //Get Song Info
+                        console.log("Music id: " + song_id + ": info Loading..");
+                        t = Date.now();
+                        xhr.open("get", api + "/search?keywords=" + song_id, true);
+                        xhr.onreadystatechange = function () {
+                            if (xhr.readyState == 4) {
+                                var ct = Date.now() - t;
+                                console.log("Music id: " + song_id + ": info Loaded. 耗时: " + ct + "ms");
+                                res = JSON.parse(xhr.responseText);
+                                //console.log(res);
+                                music.name = res.result.songs[0].name;
+                                res.result.songs[0].artists.forEach(function (data) {
+                                    //console.log(data);
+                                    if (music.artists) {
+                                        music.artists += " / " + data.name;
+                                    } else {
+                                        music.artists = data.name;
+                                    }
+                                    music.artists = data.name;
+                                });
+                                //music.pic = res.result.songs[0].album.picUrl.replace("http://", "https://");
+
+                                //Get Album Picture
+                                console.log("Album Picture Loading..");
+                                t = Date.now();
+                                xhr.open("get", api + "/song/detail?ids=" + song_id, true);
+                                xhr.onreadystatechange = function () {
+                                    if (xhr.readyState == 4) {
+                                        var ct = Date.now() - t;
+                                        console.log("Album Picture Loaded. 耗时: " + ct + "ms");
+                                        //console.log(xhr.responseText);
+                                        res = JSON.parse(xhr.responseText);
+                                        //console.log(res);
+                                        music.pic = res.songs[0].al.picUrl.replace("http://", "https://");
+                                        //Get lyric
+                                        console.log("Music id: " + song_id + ": lyric Loading..");
+                                        t = Date.now();
+                                        xhr.open("get", api + "/lyric?id=" + song_id, true);
+                                        xhr.onreadystatechange = function () {
+                                            if (xhr.readyState == 4) {
+                                                ct = Date.now() - t;
+                                                console.log("Music lyric Loaded. 耗时: " + ct + "ms");
+                                                res = JSON.parse(xhr.responseText);
+                                                //console.log(res);
+                                                if (res.hasOwnProperty("nolyric") && res.nolyric == true) {
+                                                    music.lyric = "[00:00.00]这是一首纯音乐呢，请尽情欣赏它吧！";
+                                                } else {
+                                                    music.lyric = res.lrc.lyric;
+                                                    if (res.hasOwnProperty("tlyric")) {
+                                                        //存在翻译歌词
+                                                        music.tlyric = res.tlyric.lyric;
+                                                    }
+                                                }
+                                                if (!arr) {
+                                                    var res = [music];
+                                                    callback(res);
+                                                } else {
+                                                    callback(music);
+                                                }
+                                            }
+                                        }
+                                        xhr.send();
+                                    }
+                                }
+                                xhr.send();
+                            }
+                        }
+                        xhr.send();
+                    }
+                }
+                xhr.send();
+            }
+        }
+        "use strict";
+        function LoadAplayer(list) {
+            list.forEach(function (event) {
+                var song_obj = {
+                    title: event.name,                                          // Required, music title
+                    author: event.artists,                          // Required, music author
+                    url: event.url,  // Required, music url
+                    pic: event.pic,  // Optional, music picture
+                    lrc: event.lyric
+                };
+                if (event.hasOwnProperty('tlyric')) {
+                    song_obj.sublyric = event.tlyric;
+                }
+                aplayer_list.push(song_obj);
+                if (list[(list.length - 1)] == event) {
+                    var ap = new APlayer({
+                        element: document.getElementById('aplayer'),                       // Optional, player element
+                        narrow: narrow,                                                     // Optional, narrow style
+                        autoplay: autoplay,                                                    // Optional, autoplay song(s), not supported by mobile browsers
+                        showlrc: lyric,                                                        // Optional, show lrc, can be 0, 1, 2, see: ###With lrc
+                        mutex: true,                                                     // Optional, pause other players when this player playing
+                        theme: theme,                                                  // Optional, theme color, default: #b7daff
+                        mode: mode,                                                    // Optional, play mode, can be `random` `single` `circulation`(loop) `order`(no loop), default: `circulation`
+                        preload: preload,                                               // Optional, the way to load music, can be 'none' 'metadata' 'auto', default: 'auto'
+                        listmaxheight: listmaxheight,                                             // Optional, max height of play list
+                        music: aplayer_list
+                    });
+                }
+            });
+        }
+    </script>
+    <script>
+        "use strict";
+        var playlist = GetQueryString("playlist");
+        var narrow = GetQueryString("narrow") || false;
+        if (narrow == "false") {
+            narrow = false;
+        }
+        var lyric = GetQueryString("lyric") ? 1 : false;
+        var theme = GetQueryString("theme") || "#e6d0b2";
+        var autoplay = GetQueryString("autoplay") || false;
+        if (autoplay == "false") {
+            autoplay = false;
+        }
+        var preload = GetQueryString("preload") || "auto";
+        var mode = GetQueryString("mode") || "circulation";
+        var listmaxheight = GetQueryString("listmaxheight") || "513px";
+        var api_url = GetQueryString("api") || "https://163music.a632079.me";
+        var aplayer_list = [];
+        window.onload = function () {
+            if (playlist) {
+                var ids = [];
+                ids = playlist.split(",");
+                get163music(ids, LoadAplayer, api_url);
+            } else {
+                document.write("请填写音乐ID");
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -68,7 +68,7 @@
                             }
                             music.url = res[Id].url;
                             music.pic = res[Id].album.picture;
-                            music.lyric = (res[Id].lyric.base && res[Id].lyric.base !== '[00:00.00]纯音乐，敬请聆听。\n') ? res[Id].lyric.base : res[Id].lyric.base + '[00:01.000]纯音乐，敬请聆听。\n';
+                            music.lyric = (res[Id].lyric.base && res[Id].lyric.base !== '[00:00.00]纯音乐，敬请聆听。\n') ? res[Id].lyric.base : '';
                             if (music.lyric === '')
                               delete music.lyric;
                             if (res[Id].lyric.translate) {

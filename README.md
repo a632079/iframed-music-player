@@ -15,15 +15,11 @@ Aplayer 本身是有个 Python 项目的...但最近挂掉了..所以只能自�
 
 ##### Aplayer
 
-<iframe id="aplayer" frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="86" src="https://cdn.a632079.me/163music.html?playlist=28391862" style="margin:0"></iframe>
-
 ```HTML
 <iframe id="aplayer" frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="86" src="https://cdn.a632079.me/163music.html?playlist=28391862"></iframe>
 ```
 
 #### Cplayer
-
-<iframe id="cplayer" frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="108" src="https://cdn.a632079.me/163cplayer.html?playlist=438803182"  style="margin:0"></iframe>
 
 ```HTML
 <iframe id="cplayer" frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="108" src="https://cdn.a632079.me/163cplayer.html?playlist=438803182"></iframe>

@@ -16,14 +16,25 @@ Aplayer 本身是有个 Python 项目的...但最近挂掉了..所以只能自�
 ##### Aplayer
 
 ```HTML
-<iframe id="aplayer" frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="86" src="https://cdn.a632079.me/163music.html?playlist=28391862"></iframe>
+<iframe id="aplayer" frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="86" src="163music.html?playlist=28391862"></iframe>
 ```
 
 #### Cplayer
 
 ```HTML
-<iframe id="cplayer" frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="108" src="https://cdn.a632079.me/163cplayer.html?playlist=438803182"></iframe>
+<iframe id="cplayer" frameborder="no" border="0" marginwidth="0" marginheight="0" width="330" height="108" src="163cplayer.html?playlist=438803182"></iframe>
 ```
+
+### 使用 CDN ？
+目前提供的 CDN 支持: 
+ * `https://cdn.a632079.me/163music.html`
+ * `https://cdn.a632079.me/163cplayer.html`
+
+### 自定义 API 接口？
+* `v0.0.2 -` 仅支持 `teng-koa` 的接口
+* `v0.0.1` 仅支持 `Binaryify/NeteaseCloudMusicApi` 的接口
+
+使用例子: `xxx.html?api=https://api.a632079.me/nm/`
 
 ### 更多设置？
 请参考 [Aplayer](https://github.com/MoePlayer/Aplayer) 和 [Cplayer](https://github.com/MoePlayer/cPlayer) 的 Github 文档(除了Playlist不可变更外，你都可以通过向URL加参数来配置播放器)

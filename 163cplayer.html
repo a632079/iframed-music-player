@@ -5,9 +5,9 @@
 
 <body>
     <div class="aplayer" id="app" style="margin-top:22px;"></div>
-    <script src="https://cdn.bootcss.com/cplayer/3.1.4/cplayer.js"></script>
+    <script src="https://cdn.bootcss.com/cplayer/3.2.1/cplayer.js"></script>
     <script>
-        "use strict";
+        'use strict';
         /**
         * 获取get请求 指定参数的值
         * @param name 参数名
@@ -15,7 +15,7 @@
         * @constructor
         */
         function GetQueryString(name) {
-            var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+            var reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)');
             var r = window.location.search.substr(1).match(reg);
             if (r != null)
                 return decodeURI(r[2]);
@@ -38,20 +38,20 @@
         * @constructor
         */
         function get163music(id, callback, api) {
-            var api = arguments[2] || "https://api.a632079.me/nm/";
+            var api = arguments[2] || 'https://api.a632079.me/nm/';
             var t;
             var ids = (Array.isArray(id)) ? id.toString() : id;
 
-            console.log("Song_id:" + ids);
+            console.log('Song_id:' + ids);
             var xhr = new XMLHttpRequest();
             var music = {};
             //Get Song URL
-            console.log("Music id: %s : Loading..", ids);
+            console.log('Music id: %s : Loading..', ids);
             t = Date.now();
-            xhr.open("get", api + "summary/" + ids + '?lyric=true', true);
+            xhr.open('get', api + 'summary/' + ids + '?lyric=true', true);
             xhr.onreadystatechange = function () {
                 if(xhr.readyState === 4) {
-                    console.log("Music id: %s Loads Done. Time consumed : %s ms", ids , (Date.now() - t));
+                    console.log('Music id: %s Loads Done. Time consumed : %s ms', ids , (Date.now() - t));
                     var res = JSON.parse(xhr.responseText);
                     if (res && res.ids && res.ids.length > 0) {
                         var musicData = []
@@ -68,7 +68,9 @@
                             }
                             music.url = res[Id].url;
                             music.pic = res[Id].album.picture;
-                            music.lyric = res[Id].lyric.base;
+                            music.lyric = (res[Id].lyric.base && res[Id].lyric.base !== '[00:00.00]纯音乐，敬请聆听。\n') ? res[Id].lyric.base : res[Id].lyric.base + '[00:01.000]纯音乐，敬请聆听。\n';
+                            if (music.lyric === '')
+                              delete music.lyric;
                             if (res[Id].lyric.translate) {
                                 music.tlyric = res[Id].lyric.translate
                             }
@@ -93,7 +95,7 @@
                 };
                 if (event.hasOwnProperty('tlyric')) {
                     song_obj.sublyric = event.tlyric;
-                }
+		        }
                 cplayer_list.push(song_obj);
                 if (list[(list.length - 1)] == event) {
                     var player = new cplayer({
@@ -114,35 +116,35 @@
         }
     </script>
     <script>
-        "use strict";
-        var playlist = GetQueryString("playlist");
-        var zoomOutKana = GetQueryString("zoomOutKana") || false;
-        if (zoomOutKana == "false") {
+        'use strict';
+        var playlist = GetQueryString('playlist');
+        var zoomOutKana = GetQueryString('zoomOutKana') || false;
+        if (zoomOutKana == 'false') {
             zoomOutKana = false;
         }
-        var playmode = GetQueryString("playmode") || "listloop";
-        var volume = GetQueryString("volume") || 1;
-        var autoplay = GetQueryString("autoplay") || false;
-        if (autoplay == "false") {
+        var playmode = GetQueryString('playmode') || 'listloop';
+        var volume = GetQueryString('volume') || 1;
+        var autoplay = GetQueryString('autoplay') || false;
+        if (autoplay == 'false') {
             autoplay = false;
         }
-        var showPlaylist = GetQueryString("showPlaylist") || false;
-        if (showPlaylist == "false") {
+        var showPlaylist = GetQueryString('showPlaylist') || false;
+        if (showPlaylist == 'false') {
             showPlaylist = false;
         }
-        var width = GetQueryString("width") || "";
-        var size = GetQueryString("size") || "12px";
-        var point = GetQueryString("point") || 0;
-        var style = GetQueryString("style") || "";
-        var api_url = GetQueryString("api") || "https://api.a632079.me/nm/";
+        var width = GetQueryString('width') || '';
+        var size = GetQueryString('size') || '12px';
+        var point = GetQueryString('point') || 0;
+        var style = GetQueryString('style') || '';
+        var api_url = GetQueryString('api') || 'https://api.a632079.me/nm/';
         var cplayer_list = [];
         window.onload = function () {
             if (playlist) {
                 var ids = [];
-                ids = playlist.split(",");
+                ids = playlist.split(',');
                 get163music(ids, LoadCplayer, api_url);
             } else {
-                document.write("请填写音乐ID");
+                document.write('请填写音乐ID');
             }
         }
     </script>
